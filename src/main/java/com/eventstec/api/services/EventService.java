@@ -4,6 +4,7 @@ import com.eventstec.api.domain.event.dtos.EventRequestDTO;
 import com.eventstec.api.domain.event.Event;
 import com.eventstec.api.domain.event.dtos.EventResponseDTO;
 import com.eventstec.api.repositories.EventRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,10 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
+    @Autowired
+    private AddressService addressService;
+
+    @Transactional
     public Event createEvent(EventRequestDTO eventRequestDTO) {
         String imgUrl = null;
 
@@ -53,9 +58,13 @@ public class EventService {
         newEvent.setRemote(eventRequestDTO.remote());
         newEvent.setImageUrl(imgUrl);
 
-        eventRepository.save(newEvent);
+        Event savedEvent = eventRepository.save(newEvent);
 
-        return newEvent;
+        if(!eventRequestDTO.remote()) {
+            this.addressService.createAddress(eventRequestDTO, savedEvent);
+        }
+
+        return savedEvent;
     }
 
     public List<EventResponseDTO> getEvents(int page, int size) {
@@ -70,7 +79,35 @@ public class EventService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> eventsPage = this.eventRepository.findAllUpcomingEvents(new Date(), pageable);
 
-        return eventsPage.map(event -> new EventResponseDTO(event.getId(), event.getTitle(), event.getDescription(), event.getDate(), "", "", event.getRemote(), event.getEventUrl(), event.getImageUrl()))
+        return eventsPage.map(event -> new EventResponseDTO(
+                        event.getId(),
+                        event.getTitle(),
+                        event.getDescription(),
+                        event.getDate(),
+                        event.getAddress() != null ? event.getAddress().getCity() : "",
+                        event.getAddress() != null ?event.getAddress().getUf() : "",
+                        event.getRemote(),
+                        event.getEventUrl(),
+                        event.getImageUrl())
+                )
+                .stream().toList();
+    }
+
+    public List<EventResponseDTO> getFilteredEvents(int page, int size, String title, String city, String uf, Date startDate, Date endDate) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> eventsPage = this.eventRepository.findFilteredEvents(title, city, uf, startDate, endDate, pageable);
+
+        return eventsPage.map(event -> new EventResponseDTO(
+                        event.getId(),
+                        event.getTitle(),
+                        event.getDescription(),
+                        event.getDate(),
+                        event.getAddress() != null ? event.getAddress().getCity() : "",
+                        event.getAddress() != null ?event.getAddress().getUf() : "",
+                        event.getRemote(),
+                        event.getEventUrl(),
+                        event.getImageUrl())
+                )
                 .stream().toList();
     }
 
