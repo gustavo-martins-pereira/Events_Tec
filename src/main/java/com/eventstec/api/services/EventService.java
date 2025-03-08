@@ -1,5 +1,7 @@
 package com.eventstec.api.services;
 
+import com.eventstec.api.domain.coupon.Coupon;
+import com.eventstec.api.domain.event.dtos.EventDetailsDTO;
 import com.eventstec.api.domain.event.dtos.EventRequestDTO;
 import com.eventstec.api.domain.event.Event;
 import com.eventstec.api.domain.event.dtos.EventResponseDTO;
@@ -41,6 +43,9 @@ public class EventService {
 
     @Autowired
     private AddressService addressService;
+
+    @Autowired
+    private CouponService couponService;
 
     @Transactional
     public Event createEvent(EventRequestDTO eventRequestDTO) {
@@ -91,6 +96,31 @@ public class EventService {
                         event.getImageUrl())
                 )
                 .stream().toList();
+    }
+
+    public EventDetailsDTO getEventDetailsById(UUID eventId) {
+        Event event = this.eventRepository.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+        List<Coupon> coupons = this.couponService.consultCoupons(eventId, new Date());
+
+        List<EventDetailsDTO.CouponDTO> couponDTOS = coupons.stream()
+                .map(coupon -> new EventDetailsDTO.CouponDTO(
+                        coupon.getCode(),
+                        coupon.getDiscount(),
+                        coupon.getValid()))
+                .toList();
+
+        return new EventDetailsDTO(
+                event.getId(),
+                event.getTitle(),
+                event.getDescription(),
+                event.getDate(),
+                event.getAddress() != null ? event.getAddress().getCity() : "",
+                event.getAddress() != null ? event.getAddress().getUf() : "",
+                event.getEventUrl(),
+                event.getImageUrl(),
+                couponDTOS
+        );
     }
 
     public List<EventResponseDTO> getFilteredEvents(int page, int size, String title, String city, String uf, Date startDate, Date endDate) {
