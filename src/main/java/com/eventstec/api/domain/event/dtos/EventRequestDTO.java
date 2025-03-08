@@ -1,4 +1,4 @@
-package com.eventstec.api.domain.event.DTO;
+package com.eventstec.api.domain.event.dtos;
 
 import org.springframework.web.multipart.MultipartFile;
 

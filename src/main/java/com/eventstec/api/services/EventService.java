@@ -1,6 +1,6 @@
 package com.eventstec.api.services;
 
-import com.eventstec.api.domain.event.DTO.EventRequestDTO;
+import com.eventstec.api.domain.event.dtos.EventRequestDTO;
 import com.eventstec.api.domain.event.Event;
 import com.eventstec.api.repositories.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
